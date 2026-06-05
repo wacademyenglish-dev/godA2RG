@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLFSTATION: RAGNARÖK (A2)</title>
+    <!-- Fonts: Cinzel for Epic, Inter for readability -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        ws: {
+                            bg: '#020617', 
+                            panel: 'rgba(15, 23, 42, 0.85)',
+                            frost: '#0ea5e9', 
+                            frostDark: '#0369a1',
+                            blood: '#b91c1c', 
+                            bloodDark: '#7f1d1d',
+                            gold: '#fbbf24',
+                            text: '#e2e8f0', 
+                            muted: '#64748b'
+                        }
+                    },
+                    fontFamily: {
+                        epic: ['Cinzel', 'serif'],
+                        base: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CORE AESTHETICS - Dark Mode Default */
+        body {
+            background-color: #020617; color: #e2e8f0; font-family: 'Inter', sans-serif;
+            overflow: hidden; margin: 0; transition: background-image 1s ease-in-out, background-color 1s ease-in-out;
+        }
+
+        body.theme-winter {
+            background-image: 
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
+                url("https://www.transparenttextures.com/patterns/black-scales.png");
+        }
+
+        body.theme-ragnarok {
+            background-color: #1a0505;
+            background-image: 
+                radial-gradient(circle at top right, rgba(185, 28, 28, 0.25) 0%, transparent 70%),
+                radial-gradient(circle at bottom left, rgba(217, 119, 6, 0.15) 0%, transparent 60%),
+                url("https://www.transparenttextures.com/patterns/black-scales.png");
+        }
+
+        /* Weather Effects */
+        .weather-layer { position: fixed; top: -100vh; left: 0; width: 100vw; height: 200vh; z-index: -1; pointer-events: none; transition: opacity 1s ease-in-out; }
+        .weather-snow {
+            background-image: radial-gradient(2px 2px at 20px 30px, #e2e8f0, rgba(0,0,0,0)), radial-gradient(2.5px 2.5px at 150px 150px, #e2e8f0, rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 90px 40px, #94a3b8, rgba(0,0,0,0));
+            background-size: 300px 300px; animation: weatherFall 15s linear infinite; opacity: 0.7;
+        }
+        .weather-embers {
+            background-image: radial-gradient(2.5px 2.5px at 20px 30px, #fbbf24, rgba(0,0,0,0)), radial-gradient(3px 3px at 150px 150px, #b91c1c, rgba(0,0,0,0)), radial-gradient(2px 2px at 90px 40px, #f59e0b, rgba(0,0,0,0));
+            background-size: 300px 300px; animation: weatherRise 15s linear infinite; opacity: 0;
+        }
+        @keyframes weatherFall { 0% { transform: translateY(0); } 100% { transform: translateY(100vh); } }
+        @keyframes weatherRise { 0% { transform: translateY(100vh); } 100% { transform: translateY(0); } }
+
+        h1, h2, h3, .font-epic { font-family: 'Cinzel', serif; letter-spacing: 2px; }
+
+        .ws-panel {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.95));
+            backdrop-filter: blur(10px); border: 1px solid rgba(14, 165, 233, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(14, 165, 233, 0.05);
+            border-radius: 6px; transition: all 0.5s ease; position: relative;
+        }
+        body.theme-ragnarok .ws-panel { border-color: rgba(185, 28, 28, 0.4); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(185, 28, 28, 0.1); }
+
+        .ws-btn {
+            background: rgba(14, 165, 233, 0.1); color: #bae6fd; font-family: 'Cinzel', serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em;
+            border: 1px solid #0ea5e9; border-radius: 4px; padding: 0.8rem 2.5rem; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2); transition: all 0.2s; cursor: pointer;
+        }
+        .ws-btn:hover { background: #0ea5e9; color: #020617; box-shadow: 0 0 25px rgba(14, 165, 233, 0.6); transform: scale(1.02); }
+        .ws-btn:active { transform: scale(0.98); }
+        body.theme-ragnarok .ws-btn { background: rgba(185, 28, 28, 0.1); color: #fca5a5; border-color: #b91c1c; box-shadow: 0 4px 15px rgba(185, 28, 28, 0.2); }
+        body.theme-ragnarok .ws-btn:hover { background: #b91c1c; color: #fff; box-shadow: 0 0 25px rgba(185, 28, 28, 0.6); }
+
+        /* PLAYSTATION STYLE ACHIEVEMENT SYSTEM */
+        #achievement-container {
+            position: fixed; top: -100px; right: 20px; z-index: 10000; background: rgba(15, 23, 42, 0.95); border-left: 4px solid #fbbf24; border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(251, 191, 36, 0.1); display: flex; align-items: center; gap: 15px; padding: 12px 20px;
+            min-width: 300px; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none;
+        }
+        #achievement-container.show { top: 20px; }
+        .trophy-icon { width: 40px; height: 40px; background: radial-gradient(circle, #fbbf24 0%, #b45309 100%); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-size: 1.2rem; box-shadow: 0 0 15px rgba(251,191,36,0.6); }
+
+        /* Spartan Rage Meter */
+        .rage-meter-container { width: 120px; height: 12px; background: #1e293b; border: 1px solid #475569; border-radius: 2px; overflow: hidden; position: relative; }
+        @media (min-width: 768px) { .rage-meter-container { width: 180px; height: 14px; } }
+        .rage-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #991b1b, #ef4444); box-shadow: 0 0 10px #ef4444; transition: width 0.3s ease-out; }
+        
+        #rage-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9000; opacity: 0; transition: opacity 0.2s; background: rgba(220, 38, 38, 0.1); box-shadow: inset 0 0 150px rgba(220, 38, 38, 0.8); mix-blend-mode: color-dodge;}
+        .take-damage { animation: flashRage 0.5s forwards; }
+        @keyframes flashRage { 0% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0; transform: scale(1); } }
+
+        /* Act II: Inventory / Skill Tree */
+        .inventory-slot { background: rgba(2, 6, 23, 0.6); border: 2px solid #334155; border-radius: 8px; padding: 1.5rem; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+        .inventory-slot:hover { border-color: #0ea5e9; background: rgba(14, 165, 233, 0.1); transform: translateY(-5px); }
+        .inventory-slot.revealed { border-color: #fbbf24; background: rgba(251, 191, 36, 0.05); cursor: default; transform: none; }
+        
+        .skill-node { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #334155; background: #0f172a; display: flex; justify-content: center; align-items: center; margin: 0 auto; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); z-index: 2; }
+        .skill-node.unlocked { border-color: #0ea5e9; background: rgba(14, 165, 233, 0.2); box-shadow: 0 0 25px rgba(14, 165, 233, 0.5), inset 0 0 15px rgba(14, 165, 233, 0.5); }
+        .skill-line { position: absolute; width: 4px; background: #334155; z-index: 1; }
+        .skill-line.unlocked { background: #0ea5e9; box-shadow: 0 0 10px #0ea5e9; }
+
+        /* Act III: Wow Transition */
+        .wow-transition { animation: wowShake 1.5s cubic-bezier(0.36, 0, 0.66, -0.56) forwards; }
+        @keyframes wowShake { 0% { transform: translate(1px, 1px) rotate(0deg); filter: blur(0); } 20% { transform: translate(-3px, 0px) rotate(1deg); filter: blur(2px) sepia(1) hue-rotate(-50deg); } 40% { transform: translate(1px, -2px) rotate(-1deg); filter: blur(4px) sepia(1) hue-rotate(-50deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); filter: blur(2px) sepia(1) hue-rotate(-50deg); } 80% { transform: translate(3px, 1px) rotate(-1deg); filter: blur(1px); } 100% { transform: translate(0, 0) rotate(0deg); filter: blur(0); } }
+
+        /* Act V: Dialogue Wheel */
+        .dialogue-wheel-container { position: relative; width: 300px; height: 300px; margin: 0 auto; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+        @media (min-width: 768px) { .dialogue-wheel-container { width: 400px; height: 400px; } }
+        .wheel-center { width: 60px; height: 60px; background: #1e293b; border-radius: 50%; border: 2px solid #64748b; z-index: 10; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(0,0,0,0.8); }
+        .wheel-option { position: absolute; background: rgba(15, 23, 42, 0.9); border: 1px solid #475569; padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; font-weight: 600; text-align: center; width: max-content; max-width: 180px; z-index: 5; }
+        .wheel-option:hover { background: #b91c1c; border-color: #ef4444; transform: scale(1.1); box-shadow: 0 0 20px rgba(220, 38, 38, 0.5); z-index: 20; }
+        .wheel-option.top { top: 10%; left: 50%; transform: translateX(-50%); }
+        .wheel-option.bottom { bottom: 10%; left: 50%; transform: translateX(-50%); }
+        .wheel-option.left { left: 0%; top: 50%; transform: translateY(-50%); }
+        .wheel-option.right { right: 0%; top: 50%; transform: translateY(-50%); }
+
+        /* Levels & Layout */
+        .level { display: none; opacity: 0; width: 100%; min-height: 100%; flex-direction: column; position: relative; z-index: 10; padding: 1.5rem; }
+        .level.active { display: flex; animation: fadeLevel 0.6s ease-out forwards; }
+        .level.active::before, .level.active::after { content: ''; margin: auto; }
+        .page-content { margin: auto; width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; padding: 1rem 0; }
+        @keyframes fadeLevel { 0% { opacity: 0; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
+
+        /* Loading Screen */
+        #loading-screen { position: fixed; inset: 0; background: #020617; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transition: opacity 1s ease-in-out; }
+
+        /* Script Interactive */
+        .script-word { border-bottom: 2px dashed #0ea5e9; color: #38bdf8; cursor: pointer; transition: all 0.2s; padding: 0 2px; }
+        .script-word:hover { background: rgba(14, 165, 233, 0.2); border-bottom-style: solid; }
+        .script-word.active-word { background: #0ea5e9; color: #000; box-shadow: 0 0 10px rgba(14,165,233,0.6); border-radius: 2px;}
+        body.theme-ragnarok .script-word { border-bottom-color: #dc2626; color: #fca5a5; }
+        body.theme-ragnarok .script-word:hover { background: rgba(220, 38, 38, 0.2); }
+        body.theme-ragnarok .script-word.active-word { background: #b91c1c; color: #fff; box-shadow: 0 0 10px rgba(220,38,38,0.6); }
+
+        /* Sentence Builder */
+        .word-bank-btn { background: #0f172a; border: 1px solid #fbbf24; color: #fef3c7; transition: all 0.2s; cursor: pointer; font-family: 'Cinzel', serif; padding: 0.75rem 1.5rem; font-weight: bold; border-radius: 2px; text-transform: uppercase;}
+        .word-bank-btn:hover { background: #fbbf24; color: #000; box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); transform: translateY(-3px);}
+        .word-bank-btn.hidden-word { opacity: 0; pointer-events: none; transform: scale(0.8); }
+
+        .illusion-text span { cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.3s; font-weight: 700; border-bottom: 2px dotted #ef4444; display: inline-block; margin: 0 2px; }
+        .illusion-text span:hover { color: #fbbf24; background: rgba(251, 191, 36, 0.1); border-bottom-color: #fbbf24; transform: translateY(-2px); }
+        .illusion-text span.wrong-clicked { color: #b91c1c; border-bottom-style: solid; border-bottom-color: #b91c1c; animation: shake 0.4s; }
+        .illusion-text span.correct-clicked { color: #10b981; border-bottom-style: solid; border-bottom-color: #10b981; animation: pop 0.4s; text-shadow: 0 0 15px rgba(16, 185, 129, 0.6); pointer-events: none;}
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); color: #fff;} 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .nav-bar { width: 100%; max-width: 7xl; display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1rem 0 1rem; flex-shrink: 0; margin-top: auto; z-index: 20; }
+        .speaking-starter { background: rgba(14, 165, 233, 0.1); border-left: 3px solid #0ea5e9; padding: 0.75rem 1rem; border-radius: 0 4px 4px 0; margin-top: 10px; font-family: 'Inter', sans-serif; font-size: 1rem; color: #e2e8f0; font-style: italic; }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen selection:bg-ws-frost selection:text-black theme-winter">
+
+    <!-- Environmental Layers -->
+    <div class="weather-layer weather-snow" id="snow-layer"></div>
+    <div class="weather-layer weather-embers" id="ember-layer"></div>
+    <div id="rage-overlay"></div>
+
+    <!-- ACHIEVEMENT SYSTEM -->
+    <div id="achievement-container">
+        <div class="trophy-icon"><i class="fas fa-trophy"></i></div>
+        <div>
+            <p class="text-[10px] text-ws-gold font-epic uppercase tracking-widest font-bold">Achievement Unlocked</p>
+            <p id="achievement-text" class="text-white font-bold text-sm md:text-base">Title Here</p>
+        </div>
+    </div>
+
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen">
+        <div class="relative w-full max-w-sm md:max-w-md mx-auto mb-8 animate-float flex flex-col items-center">
+            <div class="absolute inset-0 bg-ws-frost blur-[80px] opacity-20 pointer-events-none"></div>
+            <img src="https://upload.wikimedia.org/wikipedia/pt/a/a5/God_of_War_Ragnarök_capa.jpg" alt="Ragnarok Cover" class="relative z-10 w-full h-auto max-h-[40vh] object-contain rounded shadow-[0_0_40px_rgba(14,165,233,0.3)] border border-ws-frostDark bg-black/50 p-1">
+            <h1 class="text-4xl md:text-5xl font-epic font-black text-white mt-8 tracking-widest text-center drop-shadow-[0_0_15px_#0ea5e9]">RAGNARÖK</h1>
+            <p class="text-lg font-base text-gray-400 mt-2 uppercase tracking-[0.4em]">Fimbulwinter</p>
+        </div>
+        
+        <button id="start-btn" onclick="pressStart()" class="font-epic text-xl font-bold text-black bg-ws-frost px-12 py-4 hover:scale-105 transition-all uppercase tracking-widest z-20 shadow-[0_0_20px_rgba(14,165,233,0.5)] rounded-sm mt-4">Draw Leviathan</button>
+        
+        <div id="loading-ui" class="hidden flex-col items-center mt-6 z-20">
+            <i class="fas fa-snowflake text-ws-frost text-3xl mb-4 animate-spin"></i>
+            <p class="font-epic text-ws-frost tracking-widest uppercase text-sm animate-pulse mb-3 font-bold">Freezing the Realm...</p>
+            <p class="font-base text-gray-400 text-sm border border-gray-800 p-3 bg-black/80 max-w-sm text-center shadow-inner rounded italic">Level A2: Should & Shouldn't. Giving Advice.</p>
+        </div>
+    </div>
+
+    <!-- TOP HUD -->
+    <header class="h-16 shrink-0 bg-black/90 backdrop-blur-md border-b border-gray-800 z-40 flex items-center justify-between px-4 md:px-8 relative shadow-lg transition-colors" id="main-header">
+        <div class="flex items-center gap-4 md:gap-6">
+            <div class="flex flex-col">
+                <span class="text-[9px] text-gray-500 tracking-widest uppercase font-bold font-base">God of War</span>
+                <span id="hud-player-name" class="text-sm text-white font-bold uppercase tracking-wider font-epic">Spartan</span>
+            </div>
+            
+            <!-- SPARTAN RAGE METER -->
+            <div class="flex items-center gap-3 ml-2 md:ml-4">
+                <span class="text-[9px] text-ws-blood font-epic uppercase tracking-widest hidden md:block font-bold">Rage</span>
+                <div class="rage-meter-container" title="If this fills, you lose control!">
+                    <div id="rage-fill" class="rage-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-4">
+            <button onclick="toggleFullscreen()" class="font-base text-[10px] md:text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest hidden sm:block border border-gray-800 px-3 py-1.5 rounded hover:bg-gray-800">
+                [ Fullscreen ]
+            </button>
+
+            <button onclick="toggleNotes()" class="font-epic text-[10px] md:text-xs font-bold ws-btn !py-2 !px-4 !bg-transparent !text-gray-300 border-gray-600 hover:!border-ws-frost hover:!text-ws-frost">
+                <i class="fas fa-book mr-1"></i> JOURNAL
+            </button>
+        </div>
+    </header>
+
+    <!-- PLAYER'S JOURNAL (NOTES) -->
+    <div id="notes-panel" class="fixed top-16 bottom-16 right-0 w-full max-w-md bg-black/95 backdrop-blur-3xl border-l border-gray-800 z-50 translate-x-full flex flex-col shadow-[-20px_0px_50px_rgba(0,0,0,0.9)] transition-transform duration-500 text-white">
+        <div class="p-4 border-b border-gray-800 bg-[#0a0a0a] flex justify-between items-center shrink-0">
+            <h2 class="font-bold uppercase tracking-widest text-sm md:text-base flex items-center gap-2 text-ws-gold font-epic">
+                <i class="fas fa-book-open"></i> The Codex
+            </h2>
+            <button onclick="toggleNotes()" class="text-gray-500 hover:text-white font-black text-2xl px-2 transition-colors">✕</button>
+        </div>
+        <div class="flex-1 w-full p-6 overflow-hidden flex flex-col bg-[#050505]">
+            <p class="text-[10px] font-epic text-gray-500 uppercase tracking-widest mb-3 font-bold border-b border-gray-800 pb-2">Lore & Grammar Notes</p>
+            <textarea id="class-notes" class="flex-1 w-full bg-transparent text-gray-300 border-none outline-none font-base text-lg leading-relaxed resize-none placeholder-gray-700" placeholder="> Record your findings here..."></textarea>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 w-full relative z-10 overflow-y-auto scroll-smooth pt-4 pb-16 double-click-area">
+        <div class="w-full h-full relative" id="levels-container">
+            
+            <!-- ================= ACT I: MAIN MENU & LORE ================= -->
+            
+            <!-- PAGE 1: Intro -->
+            <section class="level active">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-frost">Mission Briefing</h2>
+                    <h1 class="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight font-epic uppercase drop-shadow-md">WOLFSTATION: RAGNARÖK</h1>
+                    
+                    <div class="ws-panel p-8 md:p-12 max-w-3xl w-full text-lg leading-relaxed text-gray-300 text-left border-l-4 border-ws-frost">
+                        <p class="mb-6 font-bold text-2xl border-b border-gray-700 pb-4 text-white uppercase flex items-center gap-3 font-epic">
+                            <span class="text-3xl text-ws-frost"><i class="fas fa-snowflake"></i></span> Target: Elementary (A2).
+                        </p>
+                        <p class="mb-6 font-base">Welcome to the Norse Realms. Winter is here. In this lesson, we explore a father teaching his son how to survive in a dangerous world.</p>
+                        <div class="bg-black/60 p-6 border border-gray-800 rounded shadow-inner">
+                            <h3 class="font-epic uppercase text-sm mb-4 text-ws-gold tracking-widest font-bold">Skill Tree Objectives:</h3>
+                            <ul class="list-none pl-1 space-y-4 font-base text-lg font-medium">
+                                <li class="flex items-start gap-4"><span class="text-2xl text-ws-frost mt-1"><i class="fas fa-comment-dots"></i></span> <div><strong>Should / Shouldn't:</strong> Learn to give advice and tell people what is a good or bad idea.</div></li>
+                                <li class="flex items-start gap-4"><span class="text-2xl text-ws-blood mt-1"><i class="fas fa-fist-raised"></i></span> <div><strong>Survival Actions:</strong> Vocabulary about listening, fighting, and calming down.</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <div class="w-32"></div>
+                    <button onclick="triggerAchievement('Journey Begun', '<i class=\'fas fa-compass\'></i>'); nextPage();" class="ws-btn px-10 py-4 text-lg">OPEN THE REALM <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 2: Lore & Name -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold text-4xl md:text-5xl text-white mb-4 text-center tracking-widest drop-shadow-[0_0_15px_rgba(14,165,233,0.3)] uppercase">Identify Yourself</h2>
+                    <p class="text-xl text-gray-400 font-base text-center mb-10 italic">"We must be better than those who were before us."</p>
+                    
+                    <div class="max-w-4xl w-full">
+                        <div class="ws-panel p-10 flex flex-col items-center bg-black/60 border-t-4 border-ws-frost">
+                            <i class="fas fa-user-shield text-5xl text-ws-frost mb-6"></i>
+                            <p class="text-lg text-slate-300 mb-6 font-base">Enter your name to seal the pact and begin the training.</p>
+                            <input type="text" id="player-name-input" placeholder="ENTER SPARTAN NAME" class="bg-black/80 border border-gray-600 text-white text-center font-epic text-2xl py-4 px-8 uppercase tracking-widest focus:border-ws-gold focus:shadow-[0_0_15px_rgba(251,191,36,0.3)] outline-none w-full max-w-md rounded mb-8 transition-all">
+                            
+                            <button id="btn-confirm-char" onclick="confirmCharacter()" class="ws-btn !border-ws-gold !text-ws-gold hover:!bg-ws-gold hover:!text-black px-12 py-4 text-xl">SEAL PACT</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button id="btn-lore-next" onclick="nextPage()" class="ws-btn px-10 py-4 text-lg hidden fade-in">PROCEED <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 3: Warm-up 1 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-blood">The Spartan Mind</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight uppercase font-epic">Good Advice</h1>
+                    
+                    <div class="ws-panel p-10 max-w-3xl w-full text-center hover:border-ws-blood transition-colors border-t-4 border-ws-blood">
+                        <span class="text-6xl mb-8 block drop-shadow-lg opacity-80">👂</span>
+                        <p class="text-2xl md:text-3xl font-medium mb-10 text-gray-200 leading-relaxed font-base">
+                            "Kratos always gives advice to his son. In your real life, who gives you the best advice?"
+                        </p>
+                        <div class="bg-black/50 p-6 rounded border-l-4 border-ws-blood text-left shadow-inner">
+                            <p class="font-bold text-ws-blood text-xs mb-4 tracking-widest uppercase font-epic">🗣️ Discuss:</p>
+                            <p class="text-lg text-slate-300 font-base italic border-b border-gray-700 pb-2 mb-3">"In my life, [ my mother / my father / my friend ] gives me good advice."</p>
+                            <p class="text-lg text-slate-300 font-base italic">"I usually ask for advice when I need to..."</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-8 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 4: Warm-up 2 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-gold">Father & Son</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight uppercase font-epic">Anger</h1>
+                    
+                    <div class="ws-panel p-10 max-w-3xl w-full text-center hover:border-ws-gold transition-colors border-t-4 border-ws-gold">
+                        <span class="text-6xl mb-8 block drop-shadow-[0_0_15px_#fbbf24]">😡</span>
+                        <p class="text-2xl md:text-3xl font-medium mb-10 text-gray-200 leading-relaxed font-base">
+                            "When you are angry, what do you usually do? Do you talk or do you stay quiet?"
+                        </p>
+                        <div class="bg-black/50 p-6 rounded border-l-4 border-ws-gold text-left shadow-inner">
+                            <p class="font-bold text-ws-gold text-xs mb-4 tracking-widest uppercase font-epic">🗣️ Discuss:</p>
+                            <p class="text-lg text-slate-300 font-base italic border-b border-gray-700 pb-2 mb-3">"When I am angry, I usually..."</p>
+                            <p class="text-lg text-slate-300 font-base italic">"It is [ easy / difficult ] for me to calm down."</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-8 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 5: Warm-up 3 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-frost">The Past</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight uppercase font-epic">Mistakes</h1>
+                    
+                    <div class="ws-panel p-10 max-w-3xl w-full text-center hover:border-ws-frost transition-colors border-t-4 border-ws-frost">
+                        <span class="text-6xl mb-8 block drop-shadow-[0_0_15px_#0ea5e9]">❌</span>
+                        <p class="text-2xl md:text-3xl font-medium mb-10 text-gray-200 leading-relaxed font-base">
+                            "Kratos did bad things in the past. Do you think we should forget our mistakes, or learn from them?"
+                        </p>
+                        <div class="bg-black/50 p-6 rounded border-l-4 border-ws-frost text-left shadow-inner">
+                            <p class="font-bold text-ws-frost text-xs mb-4 tracking-widest uppercase font-epic">🗣️ Discuss:</p>
+                            <p class="text-lg text-slate-300 font-base italic border-b border-gray-700 pb-2 mb-3">"I think we should [ forget / learn from ] our mistakes because..."</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-8 py-4 text-lg">OPEN INVENTORY <i class="fas fa-briefcase ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- ================= ACT II: INVENTORY & SKILL TREE ================= -->
+            
+            <!-- PAGE 6: Inventory (Click to Reveal) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-gold drop-shadow-md">Ancient Shrine</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight uppercase font-epic">Decode the Runes</h1>
+                    <p class="text-lg font-base bg-black/60 px-6 py-3 border border-gray-700 mb-10 text-gray-300 rounded shadow-inner">Click the ancient runes to reveal the vocabulary for the upcoming journey.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+                        <!-- Rune 1 -->
+                        <div class="inventory-slot flex flex-col items-center justify-center min-h-[200px] text-center" onclick="revealRune(this, 'WAR', 'A big fight between countries or gods.', 'Are games about war fun or scary?')">
+                            <i class="fas fa-gem text-5xl text-gray-500 mb-4 transition-colors"></i>
+                            <span class="font-epic font-bold text-gray-500 tracking-widest">Rune I</span>
+                        </div>
+                        <!-- Rune 2 -->
+                        <div class="inventory-slot flex flex-col items-center justify-center min-h-[200px] text-center" onclick="revealRune(this, 'HIDE', 'To stay in a place where nobody can see you.', 'When you play hide and seek, where do you hide?')">
+                            <i class="fas fa-gem text-5xl text-gray-500 mb-4 transition-colors"></i>
+                            <span class="font-epic font-bold text-gray-500 tracking-widest">Rune II</span>
+                        </div>
+                        <!-- Rune 3 -->
+                        <div class="inventory-slot flex flex-col items-center justify-center min-h-[200px] text-center" onclick="revealRune(this, 'CALM', 'Relaxed, not angry.', 'How do you stay calm during a difficult test?')">
+                            <i class="fas fa-gem text-5xl text-gray-500 mb-4 transition-colors"></i>
+                            <span class="font-epic font-bold text-gray-500 tracking-widest">Rune III</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Display Area -->
+                    <div id="rune-display" class="mt-8 ws-panel p-6 min-h-[120px] w-full max-w-3xl hidden flex-col items-center text-center"></div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button id="btn-runes-next" onclick="nextPage()" class="ws-btn px-10 py-4 text-lg hidden fade-in">PROCEED <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 7: Skill Tree Intro -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="w-full max-w-4xl text-center">
+                        <i class="fas fa-sitemap text-6xl text-ws-frost mb-6 drop-shadow-[0_0_15px_#0ea5e9]"></i>
+                        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight font-epic uppercase">Skill Tree</h1>
+                        <p class="text-xl text-gray-300 font-base leading-relaxed mb-12">To survive Ragnarök, you must unlock a new grammatical skill. We will focus on giving advice and knowing what is right.</p>
+                        
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0 relative h-64">
+                            <!-- Node 1 -->
+                            <div class="skill-node unlocked z-10 flex flex-col items-center" id="node-1">
+                                <i class="fas fa-check text-2xl text-ws-frost"></i>
+                                <span class="absolute -bottom-8 text-xs font-epic font-bold tracking-widest text-ws-frost w-max">Should (+)</span>
+                            </div>
+                            <!-- Line 1 -->
+                            <div class="skill-line w-1 md:w-32 h-16 md:h-1 hidden md:block"></div>
+                            <div class="skill-line w-1 h-8 md:hidden"></div>
+                            <!-- Node 2 -->
+                            <div class="skill-node z-10 flex flex-col items-center" id="node-2">
+                                <i class="fas fa-times text-2xl text-gray-500"></i>
+                                <span class="absolute -bottom-8 text-xs font-epic font-bold tracking-widest text-gray-500 w-max">Shouldn't (-)</span>
+                            </div>
+                            <!-- Line 2 -->
+                            <div class="skill-line w-1 md:w-32 h-16 md:h-1 hidden md:block"></div>
+                            <div class="skill-line w-1 h-8 md:hidden"></div>
+                            <!-- Node 3 -->
+                            <div class="skill-node z-10 flex flex-col items-center" id="node-3">
+                                <i class="fas fa-question text-2xl text-gray-500"></i>
+                                <span class="absolute -bottom-8 text-xs font-epic font-bold tracking-widest text-gray-500 w-max">Questions (?)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar mt-12">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">UNLOCK SKILLS <i class="fas fa-unlock ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 8: Skill 1 (Should) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-frost">Skill Unlocked</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight font-epic uppercase">Advice: Should (+)</h1>
+                    
+                    <div class="ws-panel p-8 md:p-12 max-w-4xl mx-auto w-full text-left border-l-4 border-ws-frost shadow-2xl">
+                        <p class="text-xl font-bold mb-6 text-white font-base">Use <strong class="text-ws-frost font-epic tracking-widest text-2xl">SHOULD</strong> to say that something is a <strong class="text-ws-frost underline">good idea</strong> or to give advice.</p>
+                        
+                        <div class="bg-black/60 p-6 rounded border border-gray-700 space-y-6 font-base">
+                            <div class="flex flex-col gap-2">
+                                <p class="text-2xl text-white font-medium">"You <span class="text-ws-frost font-bold">should</span> listen to me."</p>
+                                <p class="text-sm text-gray-400 italic">(It is a good idea to listen)</p>
+                            </div>
+                            <div class="flex flex-col gap-2 border-t border-gray-800 pt-4">
+                                <p class="text-2xl text-white font-medium">"He <span class="text-ws-frost font-bold">should</span> be careful."</p>
+                                <p class="text-sm text-gray-400 italic">Notice: 'Should' is the same for everyone (I, You, He, She).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="unlockNode(2); nextPage()" class="ws-btn px-12 py-5 text-lg">NEXT SKILL <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 9: Skill 2 (Shouldn't) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-blood">Skill Unlocked</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight font-epic uppercase">Negative: Shouldn't (-)</h1>
+                    
+                    <div class="ws-panel p-8 md:p-12 max-w-4xl mx-auto w-full text-left border-l-4 border-ws-blood shadow-2xl">
+                        <p class="text-xl font-bold mb-6 text-white font-base">Use <strong class="text-ws-blood font-epic tracking-widest text-2xl">SHOULDN'T</strong> to say that something is a <strong class="text-ws-blood underline">bad idea</strong>.</p>
+                        
+                        <div class="bg-black/60 p-6 rounded border border-gray-700 space-y-6 font-base">
+                            
+                            <div>
+                                <p class="text-2xl text-white font-medium">"We <span class="text-ws-blood font-bold">shouldn't</span> fight the Gods."</p>
+                                <p class="text-sm text-gray-400 italic mt-1">(It is a very bad idea)</p>
+                            </div>
+                            
+                            <div class="border-t border-gray-800 pt-4">
+                                <p class="text-2xl text-white font-medium">"You <span class="text-ws-blood font-bold">shouldn't</span> be angry."</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="unlockNode(3); nextPage()" class="ws-btn px-12 py-5 text-lg">NEXT SKILL <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 10: Skill 3 (Questions) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-gold">Skill Unlocked</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight font-epic uppercase">Questions (?)</h1>
+                    
+                    <div class="ws-panel p-8 md:p-12 max-w-4xl mx-auto w-full text-left border-l-4 border-ws-gold shadow-2xl">
+                        <p class="text-xl font-bold mb-6 text-white font-base">To ask for advice, put <strong class="text-ws-gold font-epic tracking-widest">SHOULD</strong> before the person.</p>
+                        
+                        <div class="bg-black/60 p-6 rounded border border-gray-700 space-y-6 font-base">
+                            <div class="flex flex-col gap-3">
+                                <p class="text-2xl text-white font-medium">"<span class="text-ws-gold font-bold">Should</span> we help them?"</p>
+                            </div>
+                            <div class="flex flex-col gap-3 border-t border-gray-800 pt-4">
+                                <p class="text-2xl text-white font-medium">"What <span class="text-ws-gold font-bold">should</span> I do now?"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-12 py-5 text-lg">ENTER TRAINING <i class="fas fa-fist-raised ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 11: Trial 1 -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="max-w-4xl w-full">
+                        <h2 class="font-epic font-bold text-3xl md:text-4xl text-white mb-8 text-center tracking-widest uppercase">TRIAL 1: THE GOOD IDEA</h2>
+                        <div class="ws-panel p-10 md:p-14 w-full text-center bg-black/60 border-t-4 border-t-ws-frost">
+                            <p class="text-xl md:text-2xl text-gray-300 mb-8 font-base font-medium">Choose the correct word for advice:</p>
+                            <div class="bg-black/80 p-8 rounded border border-gray-700 mb-10 shadow-inner">
+                                <p class="text-2xl md:text-4xl text-white font-bold tracking-wide font-base">"You <span class="text-gray-500 underline decoration-2 underline-offset-4">________</span> train every day to be strong."</p>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto font-base font-bold">
+                                <button onclick="checkTrialAnswer(this, true)" class="ws-btn dark py-5 text-xl text-center rounded">A) should</button>
+                                <button onclick="checkTrialAnswer(this, false)" class="ws-btn dark py-5 text-xl text-center rounded">B) shouldn't</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 12: Trial 2 -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="max-w-4xl w-full">
+                        <h2 class="font-epic font-bold text-3xl md:text-4xl text-white mb-8 text-center tracking-widest uppercase">TRIAL 2: THE BAD IDEA</h2>
+                        <div class="ws-panel p-10 md:p-14 w-full text-center bg-black/60 border-t-4 border-t-ws-blood">
+                            <p class="text-xl md:text-2xl text-gray-300 mb-8 font-base font-medium">Choose the correct word for a bad idea:</p>
+                            <div class="bg-black/80 p-8 rounded border border-gray-700 mb-10 shadow-inner">
+                                <p class="text-2xl md:text-4xl text-white font-bold tracking-wide font-base">"We <span class="text-gray-500 underline decoration-2 underline-offset-4">________</span> hide. We must fight!"</p>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto font-base font-bold">
+                                <button onclick="checkTrialAnswer(this, false)" class="ws-btn dark py-5 text-xl text-center rounded">A) should</button>
+                                <button onclick="checkTrialAnswer(this, true)" class="ws-btn dark py-5 text-xl text-center rounded">B) shouldn't</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- ================= ACT III: THE WOW MECHANIC & BOSS FIGHT ================= -->
+            
+            <!-- PAGE 13: THE WOW MECHANIC -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="w-full max-w-5xl">
+                        <h2 class="text-4xl md:text-6xl font-epic font-black text-ws-blood mb-10 text-center tracking-widest drop-shadow-[0_0_15px_rgba(185,28,28,0.5)]">PHASE VI: RAGNARÖK IS HERE</h2>
+                        <div class="ws-panel p-10 md:p-16 w-full text-center border-t-4 border-t-ws-blood bg-[radial-gradient(ellipse_at_center,rgba(185,28,28,0.1)_0%,transparent_70%)] relative overflow-hidden" id="wow-container">
+                            <i class="fas fa-fire text-9xl text-white/5 absolute -bottom-10 -right-10"></i>
+                            
+                            <p class="text-3xl text-white mb-8 leading-relaxed font-epic font-bold uppercase">
+                                "War is coming."
+                            </p>
+                            
+                            <!-- PRE-VIDEO QUESTION -->
+                            <div class="bg-black/60 p-6 border border-ws-blood/50 rounded shadow-inner mb-10 text-left z-10 relative">
+                                <p class="font-bold text-ws-blood text-xs mb-3 tracking-widest uppercase font-epic"><i class="fas fa-eye mr-2"></i> Pre-Video Check:</p>
+                                <p class="text-xl text-gray-200 font-base font-bold mb-3">Before we watch the trailer, what do you think "Ragnarök" means?</p>
+                                <div class="bg-red-900/20 p-3 rounded border-l-2 border-ws-blood">
+                                    <p class="text-lg text-gray-300 font-base italic">"I think it means [ the end of the world / a great battle ]..."</p>
+                                </div>
+                            </div>
+                            
+                            <p class="text-xl text-gray-400 mb-8 font-base">Prepare yourself to watch the cinematic.</p>
+                            <button onclick="triggerRagnarok()" class="ws-btn !border-ws-blood !text-ws-blood hover:!bg-ws-blood hover:!text-white px-12 py-5 text-2xl rounded" id="btn-wow">SOUND THE GJALLARHORN <i class="fas fa-bullhorn ml-4"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <div class="w-32"></div>
+                </div>
+            </section>
+
+            <!-- PAGE 14: THE TRAILER -->
+            <section class="level">
+                <div class="page-content w-full max-w-6xl mx-auto flex flex-col justify-center">
+                    <h2 class="font-epic font-bold tracking-[0.2em] mb-2 uppercase text-sm text-ws-blood text-center drop-shadow-md">Cinematic</h2>
+                    <h1 class="text-3xl md:text-4xl font-bold uppercase mb-6 text-center text-white font-epic">God of War Ragnarök</h1>
+                    
+                    <div class="w-full aspect-video border-2 border-ws-blood shadow-[0_0_40px_rgba(185,28,28,0.6)] relative shrink-0 bg-black p-1 rounded">
+                        <iframe class="w-full h-full rounded" src="https://www.youtube.com/embed/hfJ4Km46A-0?rel=0" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="nav-bar !mt-6">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn !border-ws-blood !text-ws-blood hover:!bg-ws-blood hover:!text-white px-10 py-4 text-lg">NEXT PHASE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 15: Post-Video Impressions -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-gold">Post-Video Discussion</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight uppercase font-epic">Trailer Impressions</h1>
+                    
+                    <div class="ws-panel p-10 max-w-3xl w-full text-center border-t-4 border-ws-gold">
+                        <span class="text-6xl mb-6 block drop-shadow-md opacity-90">🐺</span>
+                        <p class="text-2xl md:text-3xl font-medium mb-8 text-gray-200 leading-relaxed font-base">
+                            "In the trailer, Kratos and Atreus prepare for a massive war. Based on the video, answer the following:"
+                        </p>
+                        <div class="bg-black/50 p-6 rounded border-l-4 border-ws-gold text-left shadow-inner">
+                            <p class="font-bold text-ws-gold text-xs mb-4 tracking-widest uppercase font-epic">🗣️ Discuss:</p>
+                            
+                            <p class="text-lg text-white font-base font-bold mb-2">1. Who does Atreus want to find in the trailer?</p>
+                            <div class="speaking-starter !border-ws-gold !bg-yellow-900/20 mb-6">"He wants to find [ Tyr, the old God of War / Odin ]."</div>
+                            
+                            <p class="text-lg text-white font-base font-bold mb-2">2. What giant animal do they fight together at the end?</p>
+                            <div class="speaking-starter !border-ws-gold !bg-yellow-900/20">"They fight a giant [ wolf / bear / dragon ]."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-8 py-4 text-lg">READ THE LORE <i class="fas fa-book ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 16: Script Analysis 1 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-frost text-center">Dialogue Analysis</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight text-center uppercase font-epic">The Secret</h1>
+                    <p class="text-lg font-base bg-black/60 px-5 py-2 border border-gray-700 mb-8 text-gray-400 rounded shadow-inner uppercase tracking-widest font-bold">Click the blue words to read the definition and chat.</p>
+
+                    <div class="flex flex-col lg:flex-row gap-8 w-full max-w-6xl items-start">
+                        
+                        <div class="ws-panel p-8 md:p-12 flex-1 border-t-4 border-ws-frost text-left bg-black/80">
+                            <p class="text-xs text-gray-500 font-bold tracking-widest uppercase mb-4 font-epic"><i class="fas fa-quote-left mr-2 text-ws-frost"></i> Atreus</p>
+                            
+                            <p class="text-2xl md:text-3xl font-base font-bold leading-[1.8em] text-slate-200 italic">
+                                "Time is running out. The prophecies say Fimbulwinter leads to Ragnarök. War is coming. My story doesn't end <span class="script-word" onclick="readScriptWord(this, 'HIDING', 'Staying out of sight.', 'Do you hide when there is a problem, or do you fight?', 'script1')">hiding</span> in these Woods."
+                            </p>
+                        </div>
+
+                        <!-- Side Info Panel -->
+                        <div id="script1-panel" class="w-full lg:w-1/3 ws-panel p-6 hidden flex-col border-t-4 border-ws-frost bg-[#050505]">
+                            <h3 id="script-word-title-1" class="font-bold text-3xl text-ws-frost border-b border-ws-frost/30 pb-2 mb-4 font-epic tracking-widest">WORD</h3>
+                            <p id="script-word-def-1" class="text-lg font-base font-medium text-gray-300 mb-6 bg-black/40 p-4 rounded border border-gray-700">Definition goes here.</p>
+                            
+                            <div class="bg-blue-900/10 p-4 border-l-4 border-ws-frost rounded">
+                                <p class="font-epic text-ws-frost font-bold uppercase tracking-widest text-sm mb-2"><i class="fas fa-comments mr-2"></i> Discuss:</p>
+                                <p id="script-word-question-1" class="text-lg font-base font-bold text-white">Question goes here.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 17: Script Analysis 2 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-blood text-center">Dialogue Analysis</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight text-center uppercase font-epic">The Crisis</h1>
+
+                    <div class="flex flex-col lg:flex-row gap-8 w-full max-w-6xl items-start">
+                        
+                        <div class="ws-panel p-8 md:p-12 flex-1 border-t-4 border-ws-blood text-left bg-black/80">
+                            <p class="text-xs text-gray-500 font-bold tracking-widest uppercase mb-4 font-epic"><i class="fas fa-quote-left mr-2 text-ws-blood"></i> Thor</p>
+                            
+                            <p class="text-2xl md:text-3xl font-base font-bold leading-[1.8em] text-slate-200 italic">
+                                "You seem like a <span class="script-word" onclick="readScriptWord(this, 'CALM', 'Peaceful, without anger.', 'Are you a calm person in real life?', 'script2')">calm</span> and reasonable person. Are you a calm and reasonable person in moments of crisis? Panic does nothing... let it serve you here."
+                            </p>
+                        </div>
+                        
+                        <div id="script2-panel" class="w-full lg:w-1/3 ws-panel p-6 hidden flex-col border-t-4 border-ws-blood bg-[#050505]">
+                            <h3 id="script-word-title-2" class="font-bold text-3xl text-ws-blood border-b border-ws-blood/30 pb-2 mb-4 font-epic tracking-widest">WORD</h3>
+                            <p id="script-word-def-2" class="text-lg font-base font-medium text-gray-300 mb-6 bg-black/40 p-4 rounded border border-gray-700">Definition goes here.</p>
+                            
+                            <div class="bg-red-900/10 p-4 border-l-4 border-ws-blood rounded">
+                                <p class="font-epic text-ws-blood font-bold uppercase tracking-widest text-sm mb-2"><i class="fas fa-comments mr-2"></i> Discuss:</p>
+                                <p id="script-word-question-2" class="text-lg font-base font-bold text-white">Question goes here.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 18: Dilemma -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="w-full max-w-6xl">
+                        <h2 class="text-4xl md:text-5xl font-epic font-bold text-ws-gold mb-10 text-center tracking-widest uppercase">PHILOSOPHICAL DILEMMA</h2>
+                        <div class="ws-panel p-12 md:p-16 w-full text-center bg-black/80 relative shadow-[0_0_50px_rgba(251,191,36,0.15)]">
+                            <h3 class="text-3xl md:text-4xl text-white mb-6 font-base font-medium leading-tight">
+                                "We're trying to stop Ragnarök to help people. What if the only way to do that is war?"
+                            </h3>
+                            <p class="text-xl text-gray-400 mb-10 font-epic italic">- Atreus</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto font-epic uppercase tracking-widest text-xl">
+                                <button onclick="selectStance(this)" data-stance="war" class="ws-btn py-6 rounded hover:scale-105 transition !bg-transparent !border-2 !border-ws-blood !text-ws-blood hover:!bg-ws-blood hover:!text-white">Yes, sometimes war is necessary.</button>
+                                <button onclick="selectStance(this)" data-stance="peace" class="ws-btn dark py-6 rounded hover:scale-105 transition border-2 border-gray-600 hover:border-white">No, war is never the answer.</button>
+                            </div>
+
+                            <div id="stance-followup" class="hidden mt-12 bg-black p-8 border border-gray-700 text-left rounded shadow-inner fade-in">
+                                <i class="fas fa-microphone-alt text-3xl text-ws-gold mb-4"></i>
+                                <p class="text-2xl text-white font-base font-bold">Defend your choice. <span class="text-ws-gold font-epic">Explain your reasoning.</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">ENTER BOSS FIGHT <i class="fas fa-fist-raised ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 19: Boss Fight 1 (Sentence Builder Timer) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold text-3xl md:text-4xl text-ws-gold mb-6 text-center tracking-widest uppercase drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">BOSS BATTLE: THE FATHER'S LESSON</h2>
+                    <p class="text-gray-300 text-xl font-base font-medium mb-6 text-center">Form the sentence to give advice quickly before the rage consumes you!</p>
+                    
+                    <div class="ws-panel p-10 w-full max-w-5xl text-center bg-black/80 border-t-4 border-ws-gold shadow-[0_0_40px_rgba(251,191,36,0.15)] relative">
+                        
+                        <div id="sentence-display" class="min-h-[5rem] border-b-2 border-dashed border-ws-gold bg-black/60 mb-10 flex flex-wrap gap-4 items-center justify-center text-3xl md:text-4xl font-base font-bold text-white p-4 transition-all rounded shadow-inner"></div>
+
+                        <div id="word-bank" class="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
+                            <button class="word-bank-btn ws-btn dark py-3 px-6 text-xl rounded border-gray-600" onclick="selectWordBank(this)">should</button>
+                            <button class="word-bank-btn ws-btn dark py-3 px-6 text-xl rounded border-gray-600" onclick="selectWordBank(this)">listen</button>
+                            <button class="word-bank-btn ws-btn dark py-3 px-6 text-xl rounded border-gray-600" onclick="selectWordBank(this)">me.</button>
+                            <button class="word-bank-btn ws-btn dark py-3 px-6 text-xl rounded border-gray-600" onclick="selectWordBank(this)">You</button>
+                            <button class="word-bank-btn ws-btn dark py-3 px-6 text-xl rounded border-gray-600" onclick="selectWordBank(this)">to</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="resetWordBank()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-undo mr-2"></i> Reset</button>
+                    <button id="btn-boss-next-1" onclick="nextPage()" class="ws-btn px-10 py-4 text-lg hidden fade-in">SURVIVED <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 20: Boss Fight 2 (Dispel Illusion) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold text-3xl md:text-4xl text-ws-blood mb-6 text-center tracking-widest uppercase drop-shadow-[0_0_15px_rgba(185,28,28,0.5)]">BOSS BATTLE: THE ILLUSION</h2>
+                    <p class="text-gray-300 text-xl font-base mb-10 text-center">Odin is playing tricks with your mind. Click the INCORRECT grammatical word to break the magic.</p>
+                    
+                    <div class="ws-panel p-12 md:p-16 w-full max-w-4xl text-center bg-black/60 border-t-4 border-t-ws-blood shadow-[0_0_40px_rgba(185,28,28,0.2)]">
+                        <div class="text-center font-bold illusion-text bg-black/80 p-8 rounded border border-gray-700 shadow-inner text-2xl md:text-3xl leading-[2em]">
+                            "He <span onclick="checkError(this, false, '', 'error-fb')">is</span> <span onclick="checkError(this, false, '', 'error-fb')">young.</span> <span onclick="checkError(this, false, '', 'error-fb')">He</span> <span onclick="checkError(this, true, 'should', 'error-fb')" class="wrong-target">shoulds</span> <span onclick="checkError(this, false, '', 'error-fb')">stay</span> <span onclick="checkError(this, false, '', 'error-fb')">here</span>."
+                        </div>
+                        <p id="error-fb" class="text-center text-gray-400 text-lg mt-8 h-8 font-base italic"></p>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 21: Boss Defeated -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="w-full max-w-5xl text-center flex flex-col items-center">
+                        <i class="fas fa-fist-raised text-[8rem] text-ws-blood mb-8 drop-shadow-[0_0_50px_rgba(185,28,28,0.6)]"></i>
+                        <h2 class="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tighter font-epic uppercase">ENEMY DEFEATED</h2>
+                        <div class="ws-panel p-10 md:p-14 bg-black/60 border border-ws-blood/30 max-w-4xl w-full shadow-inner">
+                            <p class="text-2xl md:text-3xl text-gray-200 font-base font-medium leading-relaxed mb-8">
+                                You kept your discipline. The rage did not consume you.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn !border-ws-blood !text-ws-blood hover:!bg-ws-blood hover:!text-white px-12 py-5 text-xl uppercase">CONTINUE JOURNEY</button>
+                </div>
+            </section>
+
+            <!-- ================= ACT V: DIALOGUE WHEEL & CO-OP ================= -->
+            
+            <!-- PAGE 22: Dialogue Wheel Roleplay -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-frost animate-pulse">Roleplay</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold text-white mb-10 tracking-tight uppercase font-epic">The Father's Advice</h1>
+                    
+                    <div class="flex flex-col md:flex-row items-center gap-10 w-full max-w-6xl">
+                        <!-- NPC Side -->
+                        <div class="flex-1 ws-panel p-8 flex flex-col text-left border-l-4 border-ws-frost bg-black/80 w-full">
+                            <h3 class="text-2xl font-bold mb-2 uppercase text-ws-frost font-epic">Teacher</h3>
+                            <p class="text-xs opacity-50 tracking-widest mb-6 uppercase text-gray-400 font-bold font-base">Plays: Atreus</p>
+                            <p class="text-2xl italic font-medium text-slate-200">"Father, I am angry. They destroyed our home. Why can't we just attack them?"</p>
+                        </div>
+                        
+                        <!-- The Wheel -->
+                        <div class="flex-1 w-full flex justify-center py-10">
+                            <div class="dialogue-wheel-container">
+                                <div class="wheel-center"><i class="fas fa-comment-dots text-2xl text-gray-400"></i></div>
+                                
+                                <div class="wheel-option top border-ws-blood text-ws-blood hover:bg-ws-blood hover:text-white" onclick="selectDialogue('aggressive')">
+                                    "We should attack now." (Aggressive)
+                                </div>
+                                <div class="wheel-option left border-ws-gold text-ws-gold hover:bg-ws-gold hover:text-black" onclick="selectDialogue('logical')">
+                                    "We shouldn't rush." (Logical)
+                                </div>
+                                <div class="wheel-option right border-ws-frost text-ws-frost hover:bg-ws-frost hover:text-black" onclick="selectDialogue('calm')">
+                                    "You should be calm." (Calm)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Panel -->
+                    <div id="dialogue-result" class="hidden w-full max-w-4xl mx-auto mt-8 bg-black/80 border border-gray-700 p-6 rounded text-left fade-in">
+                        <p class="text-sm font-epic tracking-widest text-gray-500 mb-2">Read aloud:</p>
+                        <p id="dialogue-text" class="text-2xl text-white font-base font-bold italic"></p>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button id="btn-wheel-next" onclick="nextPage()" class="ws-btn px-10 py-4 text-lg hidden fade-in">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 23: Real Life Chat -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-gold">Discussion</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight uppercase font-epic">Life Advice</h1>
+                    
+                    <div class="ws-panel p-10 max-w-3xl w-full text-center border-t-4 border-ws-gold">
+                        <span class="text-6xl mb-8 block drop-shadow-md">🗣️</span>
+                        <p class="text-2xl md:text-3xl font-medium mb-10 text-gray-200 leading-relaxed font-base">
+                            "What advice should people follow to have a good life?"
+                        </p>
+                        <div class="bg-black/50 p-6 rounded border-l-4 border-ws-gold text-left shadow-inner">
+                            <p class="font-bold text-ws-gold text-xs mb-4 tracking-widest uppercase font-epic">🗣️ Speak:</p>
+                            <div class="speaking-starter !bg-yellow-900/20 !border-ws-gold !text-ws-gold mb-3">"I think everyone <strong class="text-white">should</strong>..."</div>
+                            <div class="speaking-starter !bg-yellow-900/20 !border-ws-gold !text-ws-gold">"People <strong class="text-white">shouldn't</strong>..."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-8 py-4 text-lg">HOMEWORK <i class="fas fa-book ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 24: Homework -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-frost">Assignment</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-8 tracking-tight uppercase font-epic">Mimir's Test</h1>
+                    
+                    <div class="ws-panel p-8 md:p-12 max-w-4xl mx-auto w-full relative bg-[#020617] border border-ws-frost text-left shadow-2xl">
+                        <div class="absolute -top-4 -right-4 bg-ws-frost text-black font-black uppercase tracking-widest px-4 py-2 text-sm font-epic shadow-[0_0_15px_rgba(14,165,233,0.5)]">HOMEWORK</div>
+                        <p class="text-2xl font-bold mb-6 text-white font-base border-b border-gray-800 pb-4">
+                            "Write 4 sentences giving advice to a friend."
+                        </p>
+                        <ul class="list-disc pl-6 text-lg font-medium space-y-4 text-gray-400 font-base">
+                            <li>Write 2 sentences using <strong class="text-ws-frost font-bold">Should (+)</strong> (e.g. "You should study more.").</li>
+                            <li>Write 2 sentences using <strong class="text-ws-blood font-bold">Shouldn't (-)</strong> (e.g. "You shouldn't sleep late.").</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic font-bold tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-12 py-5 text-lg">LEAVE REALM <i class="fas fa-door-open ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 25: Save Point & Stats -->
+            <section class="level">
+                <div class="page-content items-center text-center">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-gray-500">Yggdrasil</h2>
+                    <h1 class="text-5xl md:text-7xl font-black text-white mb-10 tracking-tighter uppercase font-epic">GAME SAVED</h1>
+
+                    <div class="space-y-4 max-w-xl w-full text-lg font-bold text-left mb-10 text-gray-300 font-base">
+                        <label class="flex items-center gap-4 p-5 ws-panel bg-black rounded border border-gray-700">
+                            <input type="checkbox" class="w-6 h-6 accent-ws-frost" checked disabled>
+                            <span class="mt-1 text-white">Should & Shouldn't Learned.</span>
+                        </label>
+                        <label class="flex items-center gap-4 p-5 ws-panel bg-black rounded border border-gray-700">
+                            <input type="checkbox" class="w-6 h-6 accent-ws-blood" checked disabled>
+                            <span class="mt-1 text-white">Advice Vocabulary Mastered.</span>
+                        </label>
+                    </div>
+
+                    <div class="border-t border-gray-800 pt-8 w-full flex flex-col items-center max-w-2xl mx-auto">
+                        <p class="mb-5 text-lg font-bold text-gray-400 uppercase tracking-widest font-epic">Rate your battle:</p>
+                        <div class="flex justify-center gap-3 md:gap-6 mb-8">
+                            <button onclick="rate(1)" class="game-rating text-5xl md:text-6xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">🪓</button>
+                            <button onclick="rate(2)" class="game-rating text-5xl md:text-6xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">🪓</button>
+                            <button onclick="rate(3)" class="game-rating text-5xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">🪓</button>
+                            <button onclick="rate(4)" class="game-rating text-5xl md:text-6xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">🪓</button>
+                            <button onclick="rate(5)" class="game-rating text-5xl md:text-6xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">🪓</button>
+                        </div>
+                        <div id="rat-hub" class="hidden p-4 ws-panel bg-black rounded font-bold text-base text-center uppercase tracking-widest text-ws-frost w-max mx-auto font-epic border border-ws-frost/50">> RATED <span id="star-c" class="text-white mx-2 font-black text-2xl"></span> STARS.</div>
+                        
+                        <button onclick="location.reload();" class="mt-12 ws-btn py-4 px-10 text-lg">
+                            RESTART
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- BOTTOM FOOTER -->
+    <footer class="fixed bottom-0 left-0 w-full h-12 bg-black/95 backdrop-blur-md border-t border-gray-800 z-40 flex items-center justify-center px-4 md:px-6 transition-colors shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+        <div class="flex-1 flex flex-col items-center justify-center px-4 md:px-12">
+            <div class="flex justify-between w-full max-w-2xl mb-1.5">
+                <span class="text-[10px] font-epic text-gray-500 font-bold tracking-widest uppercase">Progress</span>
+                <span class="text-[10px] font-epic text-white font-bold tracking-widest uppercase">STAGE <span id="level-num" class="text-ws-frost text-sm mx-1">1</span>/25</span>
+            </div>
+            <div class="w-full max-w-2xl bg-gray-900 h-2 rounded-full overflow-hidden border border-gray-800 shadow-inner">
+                <div id="xp-bar" class="h-full bg-gradient-to-r from-ws-frostDark to-ws-frost w-0 transition-all duration-700 shadow-[0_0_10px_#0ea5e9]"></div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // System State
+        let currentLevel = 0;
+        const levels = document.querySelectorAll('.level');
+        const totalLevels = levels.length; 
+        
+        let playerName = "Spartan";
+        let rage = 0;
+        let isRagnarok = false;
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            updateUI(); 
+        });
+
+        // --- Core Navigation ---
+        function updateUI() {
+            document.getElementById('level-num').innerText = (currentLevel + 1);
+            const xpBar = document.getElementById('xp-bar');
+            if(totalLevels > 1) xpBar.style.width = `${(currentLevel / (totalLevels - 1)) * 100}%`;
+            
+            const iframes = document.querySelectorAll('iframe');
+            iframes.forEach(iframe => { const src = iframe.src; iframe.src = src; });
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToLevel(i) {
+            if (i < 0 || i >= totalLevels) return;
+            levels.forEach(l => l.classList.remove('active'));
+            currentLevel = i;
+            levels[currentLevel].classList.add('active');
+            updateUI();
+        }
+
+        function nextPage() { goToLevel(currentLevel + 1); }
+        function prevPage() { goToLevel(currentLevel - 1); }
+
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowRight') nextPage();
+            if(e.key === 'ArrowLeft') prevPage();
+        });
+
+        // --- Achievement System ---
+        function triggerAchievement(title, icon) {
+            const container = document.getElementById('achievement-container');
+            document.getElementById('achievement-text').innerText = title;
+            const iconContainer = container.querySelector('.trophy-icon');
+            iconContainer.innerHTML = icon;
+            
+            container.classList.add('show');
+            setTimeout(() => { container.classList.remove('show'); }, 4000);
+        }
+
+        // --- Utilities ---
+        function pressStart() {
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('loading-ui').classList.remove('hidden');
+            document.getElementById('loading-ui').classList.add('flex');
+            setTimeout(() => {
+                const screen = document.getElementById('loading-screen');
+                screen.style.opacity = '0';
+                setTimeout(() => { screen.style.display = 'none'; }, 1000);
+            }, 2500); 
+        }
+
+        function toggleFullscreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const req = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+            if (!doc.fullscreenElement && req) req.call(docEl).catch(e=>console.log(e));
+            else if (doc.fullscreenElement && exit) exit.call(doc).catch(e=>console.log(e));
+        }
+
+        function toggleNotes() {
+            const notes = document.getElementById('notes-panel');
+            notes.classList.toggle('translate-x-full');
+        }
+
+        function confirmCharacter() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            if(nameInput) playerName = nameInput;
+            document.getElementById('hud-player-name').innerText = `${playerName}`;
+            triggerAchievement('Pact Sealed', '<i class="fas fa-handshake"></i>');
+            document.getElementById('btn-lore-next').classList.remove('hidden');
+        }
+
+        // --- Rage System (Failure Mechanic) ---
+        function increaseRage() {
+            rage += 34;
+            if (rage > 100) rage = 100;
+            updateRageBar();
+            
+            const overlay = document.getElementById('rage-overlay');
+            overlay.classList.remove('take-damage');
+            void overlay.offsetWidth;
+            overlay.classList.add('take-damage');
+
+            if(rage >= 100) {
+                triggerAchievement('Spartan Rage', '<i class="fas fa-fire"></i>');
+                setTimeout(() => { rage = 0; updateRageBar(); }, 3000);
+            }
+        }
+
+        function decreaseRage() {
+            if (rage > 0) {
+                rage -= 20;
+                if(rage < 0) rage = 0;
+                updateRageBar();
+            }
+        }
+
+        function updateRageBar() {
+            const fill = document.getElementById('rage-fill');
+            if(fill) fill.style.width = rage + '%';
+        }
+
+        // --- Act II Mechanics ---
+        function revealRune(el, title, desc, question) {
+            if(el.classList.contains('revealed')) return;
+            el.classList.add('revealed');
+            
+            const display = document.getElementById('rune-display');
+            display.innerHTML = `
+                <div class="fade-in text-left w-full border-l-4 border-ws-gold pl-4">
+                    <h3 class="font-epic text-2xl text-ws-gold mb-2 tracking-widest">${title}</h3>
+                    <p class="font-base text-lg text-white mb-4">${desc}</p>
+                    <div class="bg-black/40 p-3 rounded">
+                        <p class="text-[10px] text-ws-gold font-epic font-bold uppercase tracking-widest mb-1">Discuss:</p>
+                        <p class="text-sm text-gray-300 font-base italic">"${question}"</p>
+                    </div>
+                </div>
+            `;
+            display.classList.remove('hidden');
+            display.classList.add('flex');
+            
+            triggerAchievement('Rune Decoded', '<i class="fas fa-gem"></i>');
+            decreaseRage();
+            
+            document.getElementById('btn-runes-next').classList.remove('hidden');
+        }
+
+        function unlockNode(num) {
+            const node = document.getElementById('node-' + num);
+            if(node) node.classList.add('unlocked');
+            const lines = document.querySelectorAll('.skill-line');
+            if(num === 2) { lines[0].classList.add('unlocked'); lines[1].classList.add('unlocked'); }
+            if(num === 3) { lines[2].classList.add('unlocked'); lines[3].classList.add('unlocked'); }
+            triggerAchievement('Skill Unlocked', '<i class="fas fa-unlock"></i>');
+        }
+
+        // --- Trials ---
+        function checkTrialAnswer(btn, isCorrect) {
+            const siblings = btn.parentElement.children;
+            for(let s of siblings) {
+                s.classList.remove('bg-ws-frost', 'bg-ws-blood', 'bg-ws-gold', 'text-black', 'border-white');
+                s.classList.add('dark');
+            }
+            if(isCorrect) {
+                btn.classList.remove('dark');
+                if(isRagnarok) btn.classList.add('bg-ws-blood', 'text-white', 'border-white');
+                else btn.classList.add('bg-ws-frost', 'text-black', 'border-white');
+                decreaseRage();
+                triggerAchievement('Correct', '<i class="fas fa-check"></i>');
+            } else {
+                btn.classList.remove('dark');
+                btn.classList.add('bg-ws-bloodDark', 'text-white');
+                increaseRage();
+            }
+        }
+
+        // --- Act III: WOW Mechanic ---
+        function triggerRagnarok() {
+            isRagnarok = true;
+            document.body.classList.remove('theme-winter');
+            document.body.classList.add('theme-ragnarok');
+            
+            const snow = document.getElementById('snow-layer');
+            const embers = document.getElementById('ember-layer');
+            if(snow) snow.style.opacity = '0';
+            if(embers) embers.style.opacity = '0.5';
+
+            const container = document.getElementById('wow-container');
+            if(container) container.classList.add('wow-transition');
+            
+            triggerAchievement('Fimbulwinter Ends', '<i class="fas fa-fire"></i>');
+            
+            setTimeout(() => { nextPage(); }, 2000);
+        }
+
+        // --- Act III: Sentence Builder (Anti-Bug 2.0) ---
+        let selectedWords = [];
+        const targetSentence = ["You", "should", "listen", "to", "me."];
+        let isChecking = false;
+
+        function selectWordBank(btn) {
+            if (isChecking || btn.classList.contains('hidden-word')) return;
+            
+            const word = btn.textContent.trim();
+            selectedWords.push({word: word, btn: btn});
+            btn.classList.add('hidden-word');
+            renderSentence();
+
+            let isCorrectSoFar = true;
+            for(let i=0; i<selectedWords.length; i++) {
+                if(selectedWords[i].word.toLowerCase() !== targetSentence[i].toLowerCase()) isCorrectSoFar = false;
+            }
+
+            const display = document.getElementById('sentence-display');
+            
+            if(!isCorrectSoFar) {
+                isChecking = true;
+                display.classList.add('text-ws-blood', 'border-ws-blood');
+                display.classList.replace('text-white', 'text-ws-blood');
+                increaseRage();
+                
+                setTimeout(() => {
+                    display.classList.remove('text-ws-blood', 'border-ws-blood');
+                    display.classList.replace('text-ws-blood', 'text-white');
+                    resetWordBank();
+                    isChecking = false;
+                }, 800);
+            } else if(selectedWords.length === targetSentence.length) {
+                display.classList.replace('text-white', 'text-ws-gold');
+                display.classList.replace('border-ws-gold', 'border-white');
+                display.classList.add('drop-shadow-[0_0_15px_#fbbf24]');
+                
+                triggerAchievement('Lesson Learned', '<i class="fas fa-brain"></i>');
+                document.getElementById('btn-boss-next-1').classList.remove('hidden');
+            }
+        }
+
+        function renderSentence() {
+            const display = document.getElementById('sentence-display');
+            if(display) display.innerText = selectedWords.map(sw => sw.word).join(" ");
+        }
+
+        function resetWordBank() {
+            selectedWords.forEach(sw => sw.btn.classList.remove('hidden-word'));
+            selectedWords = [];
+            renderSentence();
+            const display = document.getElementById('sentence-display');
+            if(display) {
+                display.classList.replace('text-ws-gold', 'text-white');
+                display.classList.replace('border-white', 'border-ws-gold');
+                display.classList.remove('drop-shadow-[0_0_15px_#fbbf24]');
+            }
+        }
+
+        // --- Act III: Dispel Illusion ---
+        function checkError(el, isCorrect, correctWord, fbId) {
+            const container = el.parentElement;
+            if(!container || container.classList.contains('answered')) return;
+
+            container.querySelectorAll('span').forEach(s => s.className = '');
+            const fb = document.getElementById(fbId);
+            
+            if(isCorrect) { 
+                el.className = 'correct-clicked'; 
+                el.innerText = correctWord; 
+                container.classList.add('answered');
+                if(fb) { fb.innerText = "Illusion Dispelled!"; fb.style.color = "#fbbf24"; }
+                triggerAchievement('Magic Broken', '<i class="fas fa-eye"></i>');
+            } else { 
+                el.className = 'wrong-clicked'; 
+                increaseRage();
+                if(fb) { fb.innerText = "The magic holds. Find the true error."; fb.style.color = "#ef4444"; }
+            }
+        }
+
+        // --- Act IV: Script Analysis ---
+        function readScriptWord(el, title, desc, question, panelId) {
+            document.querySelectorAll('.script-word').forEach(w => w.classList.remove('active-word'));
+            el.classList.add('active-word');
+            
+            const panel = document.getElementById(panelId + '-panel');
+            document.getElementById(panelId + '-title-1').innerText = title;
+            document.getElementById(panelId + '-def-1').innerText = desc;
+            document.getElementById(panelId + '-question-1').innerText = question;
+            
+            panel.classList.remove('hidden');
+            panel.classList.add('flex', 'fade-in');
+            
+            triggerAchievement('Word Decoded', '<i class="fas fa-font"></i>');
+        }
+
+        // --- Act IV: Ethical Dilemma ---
+        function selectStance(btn) {
+            const siblings = btn.parentElement.children;
+            for(let s of siblings) {
+                s.classList.remove('!bg-ws-blood', '!text-white', 'border-white');
+            }
+            
+            btn.classList.add('!bg-ws-blood', '!text-white', 'border-white');
+            document.getElementById('stance-followup').classList.remove('hidden');
+            triggerAchievement('Path Chosen', '<i class="fas fa-balance-scale"></i>');
+        }
+
+        // --- Act V: Dialogue Wheel ---
+        function selectDialogue(type) {
+            const textEl = document.getElementById('dialogue-text');
+            const resPanel = document.getElementById('dialogue-result');
+            
+            if(type === 'aggressive') textEl.innerText = "We should attack them now! Show no mercy!";
+            if(type === 'logical') textEl.innerText = "We shouldn't rush. We need a plan.";
+            if(type === 'calm') textEl.innerText = "You should be calm, boy. Anger will not win this war.";
+            
+            resPanel.classList.remove('hidden');
+            document.getElementById('btn-wheel-next').classList.remove('hidden');
+            triggerAchievement('Roleplayed', '<i class="fas fa-comment"></i>');
+        }
+
+        function rate(n) {
+            const drops = document.querySelectorAll('.game-rating');
+            drops.forEach((d, i) => {
+                if (i >= n) { d.classList.add('grayscale', 'opacity-30'); d.style.filter = "none"; }
+                else { d.classList.remove('grayscale', 'opacity-30'); d.style.filter = "drop-shadow(0 0 10px #fbbf24)"; }
+            });
+            document.getElementById('rat-hub').classList.remove('hidden');
+            document.getElementById('star-c').innerText = n;
+            triggerAchievement('Game Saved', '<i class="fas fa-save"></i>');
+        }
+
+        const notesTextarea = document.getElementById('class-notes');
+        if(localStorage.getItem('wolfstation_gow_notes')) notesTextarea.value = localStorage.getItem('wolfstation_gow_notes');
+        notesTextarea.addEventListener('input', () => localStorage.setItem('wolfstation_gow_notes', notesTextarea.value));
+        
+    </script>
+</body>
+</html>
